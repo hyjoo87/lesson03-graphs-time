@@ -75,11 +75,40 @@ insight_box("insight_1")
 st.divider()
 
 # =========================================================
-# 구역 2. (다음 그래프를 추가할 자리)
-#    - 새 그래프를 만들 때는 이 구역을 st.header(...)부터 복사해서 이어 붙이면 됩니다.
+# 구역 2. 일관객 합계 상위 5편의 날짜별 일관객 변화
+#    - 전체 기간 동안 일관객을 합쳐서(총 누적이 아니라 일관객의 합) 가장 큰 5개 영화를 찾고,
+#      그 5편을 한 그래프에 색으로 구분해서 보여줍니다.
 # =========================================================
-st.header("2️⃣ 다음 그래프 (준비 중)")
-st.info("여기에 두 번째 그래프를 추가할 예정입니다.")
+st.header("2️⃣ 일관객 합계 TOP 5 영화 비교")
+
+# 영화명별로 '일관객'을 모두 더해서 합계가 큰 순서로 5편을 뽑습니다.
+top5_movies = (
+    df.groupby("영화명")["일관객"].sum().sort_values(ascending=False).head(5).index.tolist()
+)
+
+# 상위 5편에 해당하는 행만 골라서 날짜 순으로 정렬합니다.
+top5_df = df[df["영화명"].isin(top5_movies)].sort_values("날짜")
+
+fig2 = px.line(
+    top5_df,
+    x="날짜",
+    y="일관객",
+    color="영화명",  # 영화별로 다른 색의 선이 그려집니다.
+    markers=True,
+    title="일관객 합계 TOP 5 영화의 날짜별 일관객 변화",
+    labels={"날짜": "날짜", "일관객": "일일 관객 수(명)", "영화명": "영화"},
+)
+fig2.update_traces(
+    hovertemplate="%{fullData.name}<br>날짜: %{x|%Y-%m-%d}<br>관객수: %{y:,}명<extra></extra>"
+)
+fig2.update_layout(
+    hovermode="x unified",
+    legend_title_text="영화 (클릭하면 켜고 끌 수 있어요)",
+)
+# 플롯리는 기본적으로 범례를 클릭하면 해당 선을 껐다 켤 수 있습니다.
+
+st.plotly_chart(fig2, use_container_width=True)
+insight_box("insight_2")
 
 st.divider()
 
