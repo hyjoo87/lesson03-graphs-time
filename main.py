@@ -189,3 +189,40 @@ fig4.update_traces(
 
 st.plotly_chart(fig4, use_container_width=True)
 insight_box("insight_4")
+
+st.divider()
+
+# =========================================================
+# 구역 5. 월×요일별 일관객 합계 히트맵
+#    - 날짜에서 월과 요일을 뽑아, 월-요일 조합별로 일관객을 모두 더해 히트맵으로 봅니다.
+# =========================================================
+st.header("5️⃣ 월 × 요일 일관객 합계 히트맵")
+
+heatmap_df = df.copy()
+heatmap_df["월"] = heatmap_df["날짜"].dt.month.astype(str) + "월"
+# dt.dayofweek는 0=월요일 ~ 6=일요일이므로, 이 순서 그대로 한글 요일로 바꿔줍니다.
+weekday_order = ["월", "화", "수", "목", "금", "토", "일"]
+heatmap_df["요일"] = heatmap_df["날짜"].dt.dayofweek.map(dict(enumerate(weekday_order)))
+
+# 월-요일 조합별 일관객 합계를 표(피벗 테이블) 형태로 만듭니다.
+pivot = heatmap_df.pivot_table(
+    index="월", columns="요일", values="일관객", aggfunc="sum", fill_value=0
+)
+
+# 월은 숫자 순서대로, 요일은 월요일부터 일요일 순서대로 정렬합니다.
+month_order = sorted(pivot.index, key=lambda m: int(m.replace("월", "")))
+pivot = pivot.reindex(index=month_order, columns=weekday_order)
+
+fig5 = px.imshow(
+    pivot,
+    labels=dict(x="요일", y="월", color="일관객 합계"),
+    color_continuous_scale="YlOrRd",  # 색이 진할수록(붉을수록) 관객이 많음
+    aspect="auto",
+    title="월 × 요일별 일관객 합계",
+)
+fig5.update_traces(
+    hovertemplate="%{y} %{x}요일<br>일관객 합계: %{z:,}명<extra></extra>"
+)
+
+st.plotly_chart(fig5, use_container_width=True)
+insight_box("insight_5")
