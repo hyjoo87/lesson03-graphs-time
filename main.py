@@ -150,3 +150,42 @@ fig3.add_scatter(
 
 st.plotly_chart(fig3, use_container_width=True)
 insight_box("insight_3")
+
+st.divider()
+
+# =========================================================
+# 구역 4. 일관객 합계 TOP 10 영화 (가로 막대그래프)
+#    - 영화별 일관객 합계와, 그 영화가 10위권에 들었던 날수를 함께 보여줍니다.
+# =========================================================
+st.header("4️⃣ 일관객 합계 TOP 10 영화")
+
+# 영화별로 일관객 합계와, 10위권에 든 날수(행 개수)를 함께 구합니다.
+movie_summary = (
+    df.groupby("영화명")
+    .agg(일관객합계=("일관객", "sum"), 상위권일수=("날짜", "count"))
+    .reset_index()
+)
+
+top10_summary = movie_summary.sort_values("일관객합계", ascending=False).head(10)
+# 가로 막대그래프는 데이터의 첫 행이 아래쪽에, 마지막 행이 위쪽에 그려지므로
+# 관객 수가 많은 영화가 위로 오도록 오름차순으로 다시 정렬합니다.
+top10_summary = top10_summary.sort_values("일관객합계", ascending=True)
+
+fig4 = px.bar(
+    top10_summary,
+    x="일관객합계",
+    y="영화명",
+    orientation="h",
+    title="일관객 합계 TOP 10 영화",
+    labels={"일관객합계": "일관객 합계(명)", "영화명": "영화"},
+    custom_data=["상위권일수"],
+)
+fig4.update_traces(
+    hovertemplate=(
+        "%{y}<br>일관객 합계: %{x:,}명"
+        "<br>10위권에 든 날수: %{customdata[0]}일<extra></extra>"
+    )
+)
+
+st.plotly_chart(fig4, use_container_width=True)
+insight_box("insight_4")
